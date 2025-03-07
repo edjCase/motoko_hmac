@@ -1,4 +1,4 @@
-# ECDSA library for Motoko
+# HMAC library for Motoko
 
 A fork of [herumi/ecdsa-motoko](https://github.com/herumi/ecdsa-motoko), providing HMAC-256 implementation.
 
