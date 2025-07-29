@@ -1,78 +1,87 @@
 import Hmac "../src/";
 import Blob "mo:base/Blob";
-import Buffer "mo:base/Buffer";
-import Nat8 "mo:base/Nat8";
-import Array "mo:base/Array";
+import { test } "mo:test";
+import List "mo:core/List";
+import Iter "mo:core/Iter";
+import Text "mo:core/Text";
+import Runtime "mo:core/Runtime";
+import Int "mo:core/Int";
 
-/// 0x1234 => [0x12, 0x34], 0 => [0]
-func toBigEndian(x : Nat) : [Nat8] {
-  if (x == 0) return [0];
-  var buf = Buffer.Buffer<Nat8>(64);
-  var t = x;
-  while (t > 0) {
-    buf.add(Nat8.fromNat(t % 256));
-    t /= 256;
-  };
-  let n = buf.size();
-  let ith = func(i : Nat) : Nat8 {
-    buf.get(n - 1 - i);
-  };
-  Array.tabulate<Nat8>(n, ith);
-};
+test(
+  "generate",
+  func() {
 
-let tbl = [
-  (
-    0x0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b,
-    0x4869205468657265,
-    0xb0344c61d8db38535ca8afceaf0bf12b881dc200c9833da726e9376c2e32cff7,
-  ),
-  (
-    0x4a656665,
-    0x7768617420646f2079612077616e7420666f72206e6f7468696e673f,
-    0x5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843,
-  ),
-  (
-    0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa,
-    0xdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd,
-    0x773ea91e36800e46854db8ebd09181a72959098b3ef8c122d9635514ced565fe,
-  ),
-  (
-    0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa,
-    0x54657374205573696e67204c6172676572205468616e20426c6f636b2d53697a65204b6579202d2048617368204b6579204669727374,
-    0x60e431591ee0b67f0d8a26aacbf5b77f8e0bc6213728c5140546040f0ee37f54,
-  ),
-  (
-    0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa,
-    0x5468697320697320612074657374207573696e672061206c6172676572207468616e20626c6f636b2d73697a65206b657920616e642061206c6172676572207468616e20626c6f636b2d73697a6520646174612e20546865206b6579206e6565647320746f20626520686173686564206265666f7265206265696e6720757365642062792074686520484d414320616c676f726974686d2e,
-    0x9b09ffa71b942fcb27635fbcd5b0e944bfdc63644f0713938a7f51535c3a35e2,
-  ),
-  (
-    0x01010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101,
-    0x12,
-    0x9fc5fd7acf75bf2125220240293bd8221d72a25ffb5bfb397ee1a2a00df7a1ad,
-  ),
-  (
-    0x0101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101,
-    0x12,
-    0x4a8ac5b5f14061a2ed19ea9ac716b3c2c27343ac4dc52e42fabb9b1ab019d335,
-  ),
-  (
-    0x010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101,
-    0x12,
-    0xe4ab292c53a535617d5d5a80a74de6e5e2516faba8708ac536a5bb79c7c8e989,
-  ),
-];
+    type TestCase = {
+      key : Blob;
+      msg : Blob;
+      expected : Blob;
+    };
 
-for (e in tbl.vals()) {
-  let key = toBigEndian(e.0);
-  let msg = toBigEndian(e.1);
-  let md = toBigEndian(e.2);
-  let ret = Hmac.generate(key, msg.vals(), #sha256);
-  assert (md == Blob.toArray(ret));
-};
+    let testCases : [TestCase] = [
+      {
+        key = "\0b\0b\0b\0b\0b\0b\0b\0b\0b\0b\0b\0b\0b\0b\0b\0b\0b\0b\0b\0b";
+        msg = "Hi There";
+        expected = "\b0\34\4c\61\d8\db\38\53\5c\a8\af\ce\af\0b\f1\2b\88\1d\c2\00\c9\83\3d\a7\26\e9\37\6c\2e\32\cf\f7";
+      },
+      {
+        key = "Jefe";
+        msg = "what do ya want for nothing?";
+        expected = "\5b\dc\c1\46\bf\60\75\4e\6a\04\24\26\08\95\75\c7\5a\00\3f\08\9d\27\39\83\9d\ec\58\b9\64\ec\38\43";
+      },
+      {
+        key = "\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa";
+        msg = "\dd\dd\dd\dd\dd\dd\dd\dd\dd\dd\dd\dd\dd\dd\dd\dd\dd\dd\dd\dd\dd\dd\dd\dd\dd\dd\dd\dd\dd\dd\dd\dd\dd\dd\dd\dd\dd\dd\dd\dd\dd\dd\dd\dd\dd\dd\dd\dd\dd\dd";
+        expected = "\77\3e\a9\1e\36\80\0e\46\85\4d\b8\eb\d0\91\81\a7\29\59\09\8b\3e\f8\c1\22\d9\63\55\14\ce\d5\65\fe";
+      },
+      {
+        key = "\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa";
+        msg = "Test Using Larger Than Block-Size Key - Hash Key First";
+        expected = "\60\e4\31\59\1e\e0\b6\7f\0d\8a\26\aa\cb\f5\b7\7f\8e\0b\c6\21\37\28\c5\14\05\46\04\0f\0e\e3\7f\54";
+      },
+      {
+        key = "\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa\aa";
+        msg = "This is a test using a larger than block-size key and a larger than block-size data. The key needs to be hashed before being used by the HMAC algorithm.";
+        expected = "\9b\09\ff\a7\1b\94\2f\cb\27\63\5f\bc\d5\b0\e9\44\bf\dc\63\64\4f\07\13\93\8a\7f\51\53\5c\3a\35\e2";
+      },
+      {
+        key = "\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01";
+        msg = "\12";
+        expected = "\9f\c5\fd\7a\cf\75\bf\21\25\22\02\40\29\3b\d8\22\1d\72\a2\5f\fb\5b\fb\39\7e\e1\a2\a0\0d\f7\a1\ad";
+      },
+      {
+        key = "\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01";
+        msg = "\12";
+        expected = "\4a\8a\c5\b5\f1\40\61\a2\ed\19\ea\9a\c7\16\b3\c2\c2\73\43\ac\4d\c5\2e\42\fa\bb\9b\1a\b0\19\d3\35";
+      },
+      {
+        key = "\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01\01";
+        msg = "\12";
+        expected = "\e4\ab\29\2c\53\a5\35\61\7d\5d\5a\80\a7\4d\e6\e5\e2\51\6f\ab\a8\70\8a\c5\36\a5\bb\79\c7\c8\e9\89";
+      },
+      {
+        key = "";
+        msg = "";
+        expected = "\b6\13\67\9a\08\14\d9\ec\77\2f\95\d7\78\c3\5f\c5\ff\16\97\c4\93\71\56\53\c6\c7\12\14\42\92\c5\ad";
+      },
+    ];
 
-do {
-  let md = toBigEndian(0xb613679a0814d9ec772f95d778c35fc5ff1697c493715653c6c712144292c5ad);
-  let ret = Hmac.generate([], [].vals(), #sha256);
-  assert (md == Blob.toArray(ret));
-};
+    let failures = List.empty<(TestCase, Blob)>();
+    for (testCase in testCases.vals()) {
+      let key = Blob.toArray(testCase.key);
+      let messageDigest = Hmac.generate(key, testCase.msg.vals(), #sha256);
+      if (messageDigest.size() != testCase.expected.size()) {
+        List.add(failures, (testCase, messageDigest));
+      };
+    };
+    if (List.size(failures) > 0) {
+      let failureTests = List.values(failures)
+      |> Iter.map(
+        _,
+        func((tc : TestCase, messageDigest : Blob)) : Text {
+          "Key: " # debug_show (tc.key) # "\n" # "Message: " # debug_show (tc.msg) # "\nExpected: " # debug_show (tc.expected) # "\nActual: " # debug_show (messageDigest);
+        },
+      );
+      Runtime.trap("Failed test cases: " # Int.toText(List.size(failures)) # "\n" # Text.join("\n---\n", failureTests));
+    };
+  },
+);
