@@ -1,5 +1,5 @@
 import Hmac "../src/";
-import Blob "mo:base/Blob";
+import Blob "mo:core/Blob";
 import { test } "mo:test";
 import List "mo:core/List";
 import Iter "mo:core/Iter";

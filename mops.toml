@@ -1,9 +1,9 @@
 [package]
 name = "hmac"
-version = "0.0.2"
+version = "1.0.0"
 description = "Motoko library for HMAC generation and verification"
 repository = "https://github.com/edjCase/motoko_hmac"
-keywords = [ "hmac", "key" ]
+keywords = ["hmac", "key", "cryptography"]
 license = "Apache-2.0"
 
 [dependencies]
