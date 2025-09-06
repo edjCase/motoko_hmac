@@ -1,11 +1,11 @@
 import Hmac "../src/";
-import Blob "mo:core/Blob";
+import Blob "mo:core@1/Blob";
 import { test } "mo:test";
-import List "mo:core/List";
-import Iter "mo:core/Iter";
-import Text "mo:core/Text";
-import Runtime "mo:core/Runtime";
-import Int "mo:core/Int";
+import List "mo:core@1/List";
+import Iter "mo:core@1/Iter";
+import Text "mo:core@1/Text";
+import Runtime "mo:core@1/Runtime";
+import Int "mo:core@1/Int";
 
 test(
   "generate",

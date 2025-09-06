@@ -1,12 +1,12 @@
 import Bench "mo:bench";
-import Nat "mo:core/Nat";
-import Nat8 "mo:core/Nat8";
-import Result "mo:core/Result";
-import Blob "mo:core/Blob";
-import Array "mo:core/Array";
-import Text "mo:core/Text";
+import Nat "mo:core@1/Nat";
+import Nat8 "mo:core@1/Nat8";
+import Result "mo:core@1/Result";
+import Blob "mo:core@1/Blob";
+import Array "mo:core@1/Array";
+import Text "mo:core@1/Text";
 import HMAC "../src";
-import Runtime "mo:core/Runtime";
+import Runtime "mo:core@1/Runtime";
 
 module {
 

@@ -7,11 +7,11 @@
  * Stability   : Stable
  */
 
-import Iter "mo:core/Iter";
-import Array "mo:core/Array";
-import Blob "mo:core/Blob";
-import VarArray "mo:core/VarArray";
-import Sha256 "mo:sha2/Sha256";
+import Iter "mo:core@1/Iter";
+import Array "mo:core@1/Array";
+import Blob "mo:core@1/Blob";
+import VarArray "mo:core@1/VarArray";
+import Sha256 "mo:sha2@0/Sha256";
 
 module {
   public type HashAlgorithm = {
